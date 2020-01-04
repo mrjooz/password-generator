@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>密码生成工具</title>
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link type="text/css" rel="stylesheet" href="css/bootstrap.min.css" media="screen,projection" />
+</head>
+
+<body>
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="input-field col-12 col-sm-12 col-md-8 col-lg-6">
+        <div class="alert alert-warning" role="alert">
+          说明
+          <ol>
+            <li>密码计算全部在本地进行</li>
+            <li>记忆密码复杂一点（固定）</li>
+            <li>区分代码按一定规则：比如QQ密码区分代码为qq</li>
+          </ol>
+        </div>
+        <form>
+          <!--记忆密码-->
+          <div class="input-group mb-2 mr-sm-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">🔑</span>
+              <div class="input-group-text">记忆密码</div>
+            </div>
+            <input type="password" class="form-control" id="pwd" placeholder="Memory Password" value="" />
+            <div class="input-group-prepend">
+              <span class="input-group-text" onclick="change_show_status('pwd')"
+                onmouseover="this.style.cursor='pointer'">显示</span>
+            </div>
+          </div>
+
+          <!--区分代码-->
+          <div class="input-group mb-2 mr-sm-2">
+            <div class="input-group-prepend">
+              <div class="input-group-text">🏷️</div>
+              <div class="input-group-text">区分代码</div>
+            </div>
+            <input type="text" class="form-control" id="key" placeholder="Distinguish Code" value="" />
+          </div>
+
+          <!--密码长度-->
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <label class="input-group-text" for="pwd_length">📏</label>
+              <label class="input-group-text" for="pwd_length">密码长度</label>
+            </div>
+            <select class="custom-select" id="pwd_length">
+              <option value="10">10 位</option>
+              <option value="11">11 位</option>
+              <option value="12">12 位</option>
+              <option value="13">13 位</option>
+              <option value="14">14 位</option>
+              <option value="15">15 位</option>
+              <option value="16" selected>16 位</option>
+              <option value="17">17 位</option>
+              <option value="18">18 位</option>
+              <option value="19">19 位</option>
+              <option value="20">20 位</option>
+            </select>
+          </div>
+
+          <!-- 选项 -->
+          <div class="input-group mb-3">
+            <select class="custom-select" id="rule_of_punctuation">
+              <option value="1" selected>使用标点</option>
+              <option value="-1">禁用标点</option>
+            </select>
+            <div class="input-group-prepend">
+              <label class="input-group-text">选项</label>
+            </div>
+            <select class="custom-select" id="rule_of_letter">
+              <option value="1" selected>字母区分大小写</option>
+              <option value="-1">字母全小写</option>
+            </select>
+          </div>
+
+          <!-- 复制密码 -->
+          <div class="form-group">
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" id="code" placeholder="Encrypted Password" value="" readonly />
+              <div class="input-group-append">
+                <button class="btn btn-secondary" type="button" id="btn_copy" data-clipboard-target="#code">
+                  复制Copy
+                </button>
+              </div>
+            </div>
+            <div class="progress">
+              <div class="progress-bar" id="quality_progress" role="progressbar" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="row justify-content-center">
+              <button class="btn btn-primary" type="button" id="btn_gencode">
+                生成Generate
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript" src="js/clipboard.min.js"></script>
+  <script type="text/javascript" src="js/sha512.min.js"></script>
+  <script type="text/javascript" src="js/PasswordQualityCalculator.min.js"></script>
+  <script type="text/javascript" src="src/seek_password.min.js"></script>
+  <script type="text/javascript">
+    var clipboard = new ClipboardJS("#btn_copy");
+    document.getElementById("btn_gencode").onclick = function () {
+      var sk_pwd = generate_password();
+      if (sk_pwd) {
+        document.getElementById("code").value = sk_pwd;
+      }
+      //密码强度
+      const quality = PasswordQualityCalculator(
+        document.getElementById("code").value
+      );
+      //清除记录
+      var quality_progress = document.getElementById("quality_progress");
+      quality_progress.className = "progress-bar";
+      if (quality > 0 && quality <= 64) {
+        quality_progress.classList.add("bg-danger");
+        quality_progress.style.setProperty(
+          "width",
+          (quality / 120) * 100 + "%"
+        );
+        quality_progress.innerText = "极弱";
+      } else if (quality > 64 && quality <= 80) {
+        quality_progress.classList.add("bg-warning");
+        quality_progress.style.setProperty(
+          "width",
+          (quality / 120) * 100 + "%"
+        );
+        quality_progress.innerText = "弱";
+      } else if (quality > 80 && quality <= 112) {
+        quality_progress.style.setProperty(
+          "width",
+          (quality / 120) * 100 + "%"
+        );
+        quality_progress.innerText = "强";
+      } else if (quality > 112) {
+        quality_progress.classList.add("bg-success");
+        quality_progress.style.setProperty(
+          "width",
+          (quality / 120) * 100 + "%"
+        );
+        quality_progress.innerText = "极强";
+      }
+    };
+
+    //显示&隐藏密码
+    function change_show_status(input_id) {
+      var input = document.getElementById("pwd");
+      if (input.getAttribute("type") == "password") {
+        input.setAttribute("type", "text");
+
+      } else {
+        input.setAttribute("type", "password");
+      }
+    }
+  </script>
+</body>
+
+</html>
