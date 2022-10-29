@@ -7,6 +7,7 @@
   <title>密码生成工具</title>
   <link rel="shortcut icon" href="favicon.ico" />
   <link type="text/css" rel="stylesheet" href="css/bootstrap.min.css" media="screen,projection" />
+  <link type="text/css" rel="stylesheet" href="css/style.min.css" media="screen,projection" />
 </head>
 
 <body>
@@ -28,7 +29,7 @@
               <span class="input-group-text">🔑</span>
               <div class="input-group-text">记忆密码</div>
             </div>
-            <input type="password" class="form-control" id="pwd" placeholder="Memory Password" value="" />
+            <input type="password" class="form-control" id="pwd" placeholder="Memory Password" value=""/>
             <div class="input-group-prepend">
               <span class="input-group-text" onclick="change_show_status('pwd')"
                 onmouseover="this.style.cursor='pointer'">显示</span>
@@ -113,6 +114,18 @@
   <script type="text/javascript">
     var clipboard = new ClipboardJS("#btn_copy");
     document.getElementById("btn_gencode").onclick = function () {
+      // 输入校验
+      var inputPwd = document.getElementById("pwd");
+      var inputKey = document.getElementById("key");
+      if(inputPwd.value.length == 0){
+        inputPwd.setAttribute("placeholder", "必须输入记忆密码");
+        inputPwd.className += " Red";
+      }
+      if(inputKey.value.length == 0){
+        inputKey.setAttribute("placeholder", "必须输入区分代码");
+        inputKey.className += " Red";
+      }
+
       var sk_pwd = generate_password();
       if (sk_pwd) {
         document.getElementById("code").value = sk_pwd;
